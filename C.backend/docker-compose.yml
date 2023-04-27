@@ -1,0 +1,71 @@
+version: "3.7"
+services:
+  product:
+    build:
+      context: .
+      dockerfile: Dockerfile-product
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db-product
+    environment:
+      DB_HOST: db-product
+      DB_NAME: product
+      DB_USER: postgres
+      DB_PASSWORD: example
+  order:
+    build:
+      context: .
+      dockerfile: Dockerfile-order
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db-order
+      - inventory
+    environment:
+      DB_HOST: db-order
+      DB_NAME: order
+      DB_USER: postgres
+      DB_PASSWORD: example
+      INVENTORY_HOST: inventory
+      INVENTORY_PORT: 3003
+  inventory:
+    build:
+      context: .
+      dockerfile: Dockerfile-inventory
+    ports:
+      - "3003:3003"
+    depends_on:
+      - db-inventory
+    environment:
+      DB_HOST: db-inventory
+      DB_NAME: inventory
+      DB_USER: postgres
+      DB_PASSWORD: example
+  db-product:
+    image: postgres:13.4
+    volumes:
+      - ./init-product.sql:/docker-entrypoint-initdb.d/init-product.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: product
+  db-order:
+    image: postgres:13.4
+    volumes:
+      - ./init-order.sql:/docker-entrypoint-initdb.d/init-order.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: order
+  db-inventory:
+    image: postgres:13.4
+    volumes:
+      - ./init-inventory.sql:/docker-entrypoint-initdb.d/init-inventory.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: inventory
+networks:
+  default:
+    driver: bridge
